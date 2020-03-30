@@ -1,0 +1,16 @@
+[package]
+name = "sipoxide"
+version = "0.1.0"
+authors = ["anandijain <anandj@uchicago.edu>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+http = "0.2.1"
+serde = { version = "1.0.105" }
+tokio = { version = "0.2", features = ["macros"] }
+reqwest = "0.10.4"
+serde_json = "1.0"
+serde_derive = "1.0.105"
+csv = "1.1.3"
