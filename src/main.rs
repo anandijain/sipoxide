@@ -9,7 +9,10 @@ mod bov;
 mod scores;
 
 fn test_json_to_csv() {
-    json_scores_file_to_csv("./data/scores.json".to_string(), "./data/scores.csv".to_string());
+    json_scores_file_to_csv(
+        "./data/scores.json".to_string(),
+        "./data/scores.csv".to_string(),
+    );
     // json_scores_file_to_csv("./data/root.json".to_string(), "./data/root.csv".to_string());
 }
 
@@ -21,9 +24,9 @@ fn json_scores_file_to_csv(read_fn: String, write_fn: String) -> Result<(), Box<
 
     let ds: Vec<scores::Root> = serde_json::from_str(&json_data).unwrap();
     for elt in ds.iter() {
-            let rec = scores::Root::gen_rec(elt);
-            println!("{:#?}", rec);
-            wtr.write_record(rec)?;
+        let rec = scores::Root::gen_rec(elt);
+        // println!("{:#?}", rec);
+        wtr.write_record(rec)?;
     }
     wtr.flush()?;
     Ok(())
@@ -40,20 +43,19 @@ fn scores_to_csv(scores: Vec<scores::Root>, write_fn: String) -> Result<(), Box<
         "secs",
         "is_ticking",
         "a_pts",
-        "h_pts"
+        "h_pts",
     ])?;
 
     for elt in scores.iter() {
-            let rec = scores::Root::gen_rec(elt);
-            println!("{:#?}", rec);
-            wtr.write_record(rec)?;
-        }
+        let rec = scores::Root::gen_rec(elt);
+        // println!("{:#?}", rec);
+        wtr.write_record(rec)?;
+    }
     wtr.flush()?;
     Ok(())
 }
 
 fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn Error>> {
-
     let mut wtr = csv::Writer::from_path(write_fn)?;
 
     wtr.write_record(&[
@@ -63,6 +65,8 @@ fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn E
         "dg_desc",
         "mkt_desc",
         "oc_desc",
+        "oc_status",
+        "oc_type_field",
         "price",
         "hc",
     ])?;
@@ -81,6 +85,8 @@ fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn E
                                 &dg.description,
                                 &m.description,
                                 &oc.description,
+                                &oc.status,
+                                &oc.type_field,
                                 &oc.price.decimal,
                                 &hc.to_string(),
                             ];
@@ -94,6 +100,8 @@ fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn E
                                 &dg.description,
                                 &m.description,
                                 &oc.description,
+                                &oc.status,
+                                &oc.type_field,
                                 &oc.price.decimal,
                                 &"".to_string(),
                             ];
@@ -135,6 +143,3 @@ async fn main() -> Result<(), reqwest::Error> {
 
     Ok(())
 }
-
-
-
