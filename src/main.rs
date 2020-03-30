@@ -9,11 +9,11 @@ mod bov;
 mod scores;
 
 fn test_json_to_csv() {
-    json_file_to_csv("./data/scores.json".to_string(), "./data/scores.csv".to_string());
-    json_file_to_csv("./data/root.json".to_string(), "./data/root.csv".to_string());
+    json_scores_file_to_csv("./data/scores.json".to_string(), "./data/scores.csv".to_string());
+    // json_scores_file_to_csv("./data/root.json".to_string(), "./data/root.csv".to_string());
 }
 
-fn json_file_to_csv(read_fn: String, write_fn: String) -> Result<(), Box<dyn Error>> {
+fn json_scores_file_to_csv(read_fn: String, write_fn: String) -> Result<(), Box<dyn Error>> {
     let json_data = fs::read_to_string(read_fn)
         .expect("Something went wrong reading the file")
         .to_string();
@@ -29,7 +29,30 @@ fn json_file_to_csv(read_fn: String, write_fn: String) -> Result<(), Box<dyn Err
     Ok(())
 }
 
-fn parse_and_write(json_data: String, write_fn: String) -> Result<(), Box<dyn Error>> {
+fn scores_to_csv(scores: Vec<scores::Root>, write_fn: String) -> Result<(), Box<dyn Error>> {
+    let mut wtr = csv::Writer::from_path(write_fn)?;
+    wtr.write_record(&[
+        "id",
+        "sport",
+        "status",
+        "last_mod",
+        "period",
+        "secs",
+        "is_ticking",
+        "a_pts",
+        "h_pts"
+    ])?;
+
+    for elt in scores.iter() {
+            let rec = scores::Root::gen_rec(elt);
+            println!("{:#?}", rec);
+            wtr.write_record(rec)?;
+        }
+    wtr.flush()?;
+    Ok(())
+}
+
+fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn Error>> {
 
     let mut wtr = csv::Writer::from_path(write_fn)?;
 
@@ -43,9 +66,8 @@ fn parse_and_write(json_data: String, write_fn: String) -> Result<(), Box<dyn Er
         "price",
         "hc",
     ])?;
-    let ds: Vec<bov::Root> = serde_json::from_str(&json_data).unwrap();
 
-    for s in ds.iter() {
+    for s in lines.iter() {
         // s is a Root
         for e in s.events.iter() {
             for dg in e.display_groups.iter() {
@@ -95,14 +117,21 @@ async fn main() -> Result<(), reqwest::Error> {
     let lines_fn = "./data/root.csv";
     let scores_fn = "./data/scores.csv";
 
-    let res = reqwest::get(scores_url)
-        .await?;
-
-    println!("Status: {}", res.status());
-
+    let res = reqwest::get(scores_url).await?;
+    println!("{} status: {}", scores_url, res.status());
     let body = res.text().await?;
+    let scores: Vec<scores::Root> = serde_json::from_str(&body.to_string()).unwrap();
+    if let Err(err) = scores_to_csv(scores, scores_fn.to_string()) {
+        println!("{}", err);
+    }
 
-    parse_and_write(body.to_string(), scores_fn.to_string());
+    let res = reqwest::get(lines_url).await?;
+    println!("{} status: {}", lines_url, res.status());
+    let body = res.text().await?;
+    let lines: Vec<bov::Root> = serde_json::from_str(&body.to_string()).unwrap();
+    if let Err(err) = lines_to_csv(lines, lines_fn.to_string()) {
+        println!("{}", err);
+    }
 
     Ok(())
 }

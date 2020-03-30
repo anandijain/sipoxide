@@ -54,7 +54,7 @@ impl fmt::Display for Root {
 }
 
 impl Root {
-    fn gen_rec(&self) -> Vec<String>{
+    pub fn gen_rec(&self) -> Vec<String>{
         if let Some(ls) = &self.latest_score {
             let rec = &[
                 self.event_id.to_string(),
@@ -67,7 +67,7 @@ impl Root {
                 ls.visitor.to_string(),
                 ls.home.to_string(),
             ];
-            return rec;
+            return rec.to_vec();
         } else {
             let rec = &[
                 self.event_id.to_string(),
@@ -80,7 +80,7 @@ impl Root {
                 "".to_string(),
                 "".to_string(),
             ];
-            return rec;
+            return rec.to_vec();
         }
     }
 }

@@ -48,7 +48,7 @@ pub struct Event {
     pub description: String,
     #[serde(rename = "type")]
     pub type_field: String,
-    pub link: String,
+    pub link: Option<String>,
     pub status: String,
     pub sport: String,
     pub start_time: Option<i128>,
