@@ -1,11 +1,13 @@
-#[macro_use]
-extern crate serde_derive;
+#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use] extern crate rocket;
+#[macro_use] extern crate serde_derive;
 extern crate csv;
 extern crate serde;
+use rocket_contrib::json::Json;
 use std::error::Error;
 use std::fs;
 
-mod bov;
+mod lines;
 mod scores;
 
 fn test_json_to_csv() {
@@ -55,7 +57,7 @@ fn scores_to_csv(scores: Vec<scores::Root>, write_fn: String) -> Result<(), Box<
     Ok(())
 }
 
-fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn Error>> {
+fn lines_to_csv(lines: Vec<lines::Root>, write_fn: String) -> Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_path(write_fn)?;
 
     wtr.write_record(&[
@@ -118,28 +120,75 @@ fn lines_to_csv(lines: Vec<bov::Root>, write_fn: String) -> Result<(), Box<dyn E
 }
 
 #[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+async fn lines() -> Result<Vec<lines::Root>, reqwest::Error> {
     let lines_url = "https://www.bovada.lv/services/sports/event/v2/events/A/description/";
-    let scores_url = "https://services.bovada.lv/services/sports/results/api/v1/scores/";
-
     let lines_fn = "./data/root.csv";
-    let scores_fn = "./data/scores.csv";
+    let res = reqwest::get(lines_url).await?;
+    println!("{} status: {}", lines_url, res.status());
+    let body = res.text().await?;
+    let lines: Vec<lines::Root> = serde_json::from_str(&body.to_string()).unwrap();
+    // if let Err(err) = lines_to_csv(lines, lines_fn.to_string()) {
+    //     println!("{}", err);
+    // }
 
+     Ok(lines)
+}
+
+#[tokio::main]
+async fn scores() -> Result<Vec<scores::Root>, reqwest::Error> {
+    let scores_url = "https://services.bovada.lv/services/sports/results/api/v1/scores/";
+    let scores_fn = "./data/scores.csv";
     let res = reqwest::get(scores_url).await?;
     println!("{} status: {}", scores_url, res.status());
     let body = res.text().await?;
     let scores: Vec<scores::Root> = serde_json::from_str(&body.to_string()).unwrap();
-    if let Err(err) = scores_to_csv(scores, scores_fn.to_string()) {
-        println!("{}", err);
-    }
-
-    let res = reqwest::get(lines_url).await?;
-    println!("{} status: {}", lines_url, res.status());
-    let body = res.text().await?;
-    let lines: Vec<bov::Root> = serde_json::from_str(&body.to_string()).unwrap();
-    if let Err(err) = lines_to_csv(lines, lines_fn.to_string()) {
-        println!("{}", err);
-    }
-
-    Ok(())
+    Ok(scores)
 }
+
+fn main() {
+    let l = lines();
+    // let s = scores();
+    // for elt in l.iter() {
+    //     println!("{:#?}", elt)
+    // }
+    rkt_main()
+}
+
+#[get("/")]
+fn index () -> &'static str {
+    "hello"
+}
+
+#[get("/scores")]
+fn route_scores() -> Json<Vec<scores::Root>>  {
+    // let fn = "./data/scores.csv";
+    // let file = File::open(fn)?;
+    // let mut rdr = csv::Reader::from_reader(file);
+    let s = scores(); 
+    for elt in &s {
+        println!("{:?}", elt);
+    }
+    match s {
+        Ok(s) => Json(s),
+        _ => Json(vec![])
+    }
+}
+
+#[get("/lines")]
+fn route_lines() -> Json<Vec<lines::Root>>  {
+    // let fn = "./data/scores.csv";
+    // let file = File::open(fn)?;
+    // let mut rdr = csv::Reader::from_reader(file);
+    let s = lines(); 
+    // for elt in &s {
+    //     println!("{:?}", elt);
+    // }
+    match s {
+        Ok(s) => Json(s),
+        _ => Json(vec![])
+    }
+}
+fn rkt_main() {
+    rocket::ignite().mount("/", routes![index, route_scores, route_lines]).launch();
+}
+
