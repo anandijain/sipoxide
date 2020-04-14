@@ -117,6 +117,11 @@ pub fn get_lines() -> Option<Vec<lines::Root>> {
     return None
 }
 
+// pub fn cmp(t1, t2: HashMap<String, Vec<String>) -> Vec<String> {
+    // at the end of cmp, t1 can be entirely deallocd, 
+    // t2 must live on, as ret is list of ids, which are new in t2
+
+// }
 
 // pub fn lines_hashmap() -> Option<HashMap<String, &'static csv::StringRecord>> {
 //     if let Some(lines_vec) = get_lines(){
