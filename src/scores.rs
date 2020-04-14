@@ -1,6 +1,7 @@
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
+extern crate csv;
 
 use std::fmt;
 
@@ -57,34 +58,23 @@ impl fmt::Display for Root {
 }
 
 impl Root {
-    pub fn gen_rec(&self) -> Vec<String>{
-        if let Some(ls) = &self.latest_score {
-            let rec = &[
-                self.event_id.to_string(),
-                self.sport.to_string(),
-                self.game_status.to_string(),
-                self.last_updated.to_string(),
-                self.clock.period_number.to_string(),
-                self.clock.relative_game_time_in_secs.to_string(),
-                self.clock.is_ticking.to_string(),
-                ls.visitor.to_string(),
-                ls.home.to_string(),
+    pub fn to_record(&self) -> csv::StringRecord {
+        let latest_scores = match &self.latest_score {
+            Some(scores) => [scores.visitor.to_string(), scores.home.to_string()],
+            None => ["".to_string(), "".to_string()],
+        };
+        let rec = &[
+            self.event_id.to_string(),
+            self.sport.to_string(),
+            self.game_status.to_string(),
+            self.last_updated.to_string(),
+            self.clock.period_number.to_string(),
+            self.clock.relative_game_time_in_secs.to_string(),
+            self.clock.is_ticking.to_string(),
+            latest_scores[0].to_string(),
+            latest_scores[1].to_string(),
             ];
-            return rec.to_vec();
-        } else {
-            let rec = &[
-                self.event_id.to_string(),
-                self.sport.to_string(),
-                self.game_status.to_string(),
-                self.last_updated.to_string(),
-                self.clock.period_number.to_string(),
-                self.clock.relative_game_time_in_secs.to_string(),
-                self.clock.is_ticking.to_string(),
-                "".to_string(),
-                "".to_string(),
-            ];
-            return rec.to_vec();
-        }
+        return csv::StringRecord::from(rec.to_vec());
     }
 }
 

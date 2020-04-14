@@ -36,6 +36,7 @@ const SCORES_HEADER: &[&'static str; 9] = &[
         "a_pts",
         "h_pts",
 ];
+
 pub fn test_json_to_csv() {
     json_scores_file_to_csv(
         "./data/scores.json".to_string(),
@@ -52,9 +53,9 @@ pub fn json_scores_file_to_csv(read_fn: String, write_fn: String) -> Result<(), 
 
     let ds: Vec<scores::Root> = serde_json::from_str(&json_data).unwrap();
     for elt in ds.iter() {
-        let rec = scores::Root::gen_rec(elt);
+        let rec = scores::Root::to_record(elt);
         // println!("{:#?}", rec);
-        wtr.write_record(rec)?;
+        wtr.write_record(&rec)?;
     }
     wtr.flush()?;
     Ok(())
@@ -65,8 +66,8 @@ pub fn scores_to_csv(scores: Vec<scores::Root>, write_fn: String) -> Result<(), 
     wtr.write_record(SCORES_HEADER)?;
 
     for elt in scores.iter() {
-        let rec = scores::Root::gen_rec(elt);
-        wtr.write_record(rec)?;
+        let rec = scores::Root::to_record(elt);
+        wtr.write_record(&rec)?;
         // println!("{:#?}", rec);
     }
     wtr.flush()?;
