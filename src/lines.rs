@@ -30,31 +30,8 @@ impl Root {
     pub fn to_records(&self) -> Vec<csv::StringRecord> {
         let mut recs: Vec<csv::StringRecord> = Vec::new();
         for e in self.events.iter() {
-            for dg in e.display_groups.iter() {
-                for m in dg.markets.iter() {
-                    for oc in m.outcomes.iter() {
-                        let hc = match &oc.price.handicap {
-                            Some(hc) => hc,
-                            None => "",
-                        };
-
-                        let rec = &[
-                            &oc.id,
-                            &e.id,
-                            &e.sport,
-                            &e.description,
-                            &dg.description,
-                            &m.description,
-                            &oc.description,
-                            &oc.status,
-                            &oc.type_field,
-                            &oc.price.decimal,
-                            &hc.to_string(),
-                        ];
-                        recs.push(csv::StringRecord::from(rec.to_vec()));
-                    }
-                }
-            }
+            let mut ev_recs = Event::to_records(e);
+            recs.append(&mut ev_recs);
         }
         return recs;
     }
@@ -102,6 +79,37 @@ pub struct Event {
     pub competitors: Vec<Competitor>,
     // pub display_groups: Option<Vec<DisplayGroup>>,
     pub display_groups: Vec<DisplayGroup>,
+}
+
+impl Event {
+    pub fn to_records(&self) -> Vec<csv::StringRecord>{
+        let mut recs: Vec<csv::StringRecord> = Vec::new();
+        for dg in self.display_groups.iter() {
+                for m in dg.markets.iter() {
+                    for oc in m.outcomes.iter() {
+                        let hc = match &oc.price.handicap {
+                            Some(hc) => hc,
+                            None => "",
+                        };
+                        let rec = &[
+                            &oc.id,
+                            &self.id,
+                            &self.sport,
+                            &self.description,
+                            &dg.description,
+                            &m.description,
+                            &oc.description,
+                            &oc.status,
+                            &oc.type_field,
+                            &oc.price.decimal,
+                            &hc.to_string(),
+                        ];
+                        recs.push(csv::StringRecord::from(rec.to_vec()));
+                    }
+                }
+            }
+        return recs;
+    }
 }
 
 impl fmt::Display for Event {

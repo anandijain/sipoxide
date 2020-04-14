@@ -90,14 +90,6 @@ pub fn lines_to_csv(lines: Vec<lines::Root>, write_fn: String) -> Result<(), Box
     Ok(())
 }
 
-pub fn get_lines() -> Option<Vec<lines::Root>> {
-    let lines_url = "https://www.bovada.lv/services/sports/event/v2/events/A/description/";
-    if let Ok(body) = getter(lines_url.to_string()) {
-        let lines: Vec<lines::Root> = serde_json::from_str(&body.to_string()).unwrap();
-        return Some(lines)
-    }
-    return None
-}
 
 #[tokio::main]
 pub async fn getter(url: String) -> Result<String, reqwest::Error> {
@@ -116,22 +108,36 @@ pub fn get_scores() -> Option<Vec<scores::Root>> {
     return None
 }
 
-pub fn lines_hashmap<'a>(ls: &'a Vec<lines::Root>) -> HashMap<String, &'a lines::Event> {
-    let mut lines_map = HashMap::new();
-    for elt in ls.iter() {
-        for event in elt.events.iter() {
-            let id = &event.id;
-            lines_map.insert(id.to_string(), event);
-            // println!("{}: {}", id.to_string(), event.description.to_string());
-        }
+pub fn get_lines() -> Option<Vec<lines::Root>> {
+    let lines_url = "https://www.bovada.lv/services/sports/event/v2/events/A/description/";
+    if let Ok(body) = getter(lines_url.to_string()) {
+        let lines: Vec<lines::Root> = serde_json::from_str(&body.to_string()).unwrap();
+        return Some(lines)
     }
-    lines_map
+    return None
 }
-pub fn scores_hashmap<'a>(scores_vec: &'a Vec<scores::Root>) -> HashMap<String, &'a scores::Root> {
-    let mut scores_map = HashMap::new();
-    for elt in scores_vec.iter() {
-        let id = &elt.event_id;
-        scores_map.insert(id.to_string(), elt);
-        }
-    scores_map
-}
+
+
+// pub fn lines_hashmap() -> Option<HashMap<String, &'static csv::StringRecord>> {
+//     if let Some(lines_vec) = get_lines(){
+//         let mut lines_map : HashMap<String, &'static csv::StringRecord> = HashMap::new();
+//         for l in lines_vec.iter(){
+//             let recs = lines::Root::to_records(l);
+//             for r in recs.iter(){
+//                 if let Some(id) = r.get(0) {
+//                     lines_map.insert(id.to_string(), &r);
+//                 }
+//             }
+//         }
+//         return Some(lines_map)
+//     }
+//     return None
+// }
+// pub fn scores_hashmap<'a>(scores_vec: &'a Vec<scores::Root>) -> HashMap<String, &'a scores::Root> {
+//     let mut scores_map = HashMap::new();
+//     for elt in scores_vec.iter() {
+//         let id = &elt.event_id;
+//         scores_map.insert(id.to_string(), elt);
+//         }
+//     scores_map
+// }
