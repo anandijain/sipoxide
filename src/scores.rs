@@ -1,7 +1,10 @@
 extern crate serde;
+extern crate serde_derive;
+extern crate serde_json;
+
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
     pub event_id: i64,
@@ -85,7 +88,7 @@ impl Root {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AltIds {
     #[serde(rename = "BGS")]
@@ -93,7 +96,7 @@ pub struct AltIds {
     pub feed_code: Option<i64>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestScore {
     pub home: String,
@@ -106,7 +109,7 @@ impl fmt::Display for LatestScore {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Clock {
     pub period: String,
@@ -130,7 +133,7 @@ impl fmt::Display for Clock {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Children {
     pub period: String,
@@ -142,7 +145,7 @@ pub struct Children {
     pub is_ticking: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SportDetails {
     pub numbers: Option<Numbers>,
@@ -151,21 +154,21 @@ pub struct SportDetails {
     pub football: Option<Football>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Numbers {
     pub draws: Vec<Draw>,
     pub previous_score: Option<PreviousScore>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Draw {
     pub number: i64,
     pub round: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviousScore {
     pub total: i64,
@@ -173,14 +176,14 @@ pub struct PreviousScore {
     pub parity: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Draw2 {
     pub number: i64,
     pub round: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Soccer {
     pub yellow_cards: Option<YellowCards>,
@@ -190,63 +193,63 @@ pub struct Soccer {
     pub penalties: Option<Penalties>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct YellowCards {
     pub home: i64,
     pub visitor: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RedCards {
     pub home: i64,
     pub visitor: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Corners {
     pub home: i64,
     pub visitor: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Penalties {
     pub home: i64,
     pub visitor: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Tennis {
     pub sets: Sets,
     pub server: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sets {
     pub home: i64,
     pub visitor: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Football {
     pub possession: String,
     pub show_secondary_info: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviousPeriodsScore {
     pub home: i64,
     pub visitor: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CurrentPeriodScore {
     pub home: i64,
@@ -259,14 +262,14 @@ impl fmt::Display for CurrentPeriodScore {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LastSignificantKeyEvent {
     pub event_type: String,
     pub params: Params,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Params {
     pub home_score: Option<String>,

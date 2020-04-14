@@ -1,9 +1,13 @@
 extern crate serde;
+extern crate serde_derive;
+extern crate serde_json;
+
 use std::fmt;
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Record {
+    oc_id: String,
     id: String,
     sport: String,
     event_desc: String,
@@ -14,7 +18,7 @@ struct Record {
     hc: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
     pub path: Vec<Path>,
@@ -27,7 +31,7 @@ impl fmt::Display for Root {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Path {
     pub id: String,
@@ -41,7 +45,7 @@ pub struct Path {
     pub current: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     pub id: String,
@@ -71,7 +75,7 @@ impl fmt::Display for Event {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Competitor {
     pub id: String,
@@ -79,7 +83,7 @@ pub struct Competitor {
     pub home: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayGroup {
     pub id: String,
@@ -103,7 +107,7 @@ impl fmt::Display for DisplayGroup {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Market {
     pub id: String,
@@ -125,7 +129,7 @@ impl fmt::Display for Market {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Period {
     pub id: String,
@@ -135,7 +139,7 @@ pub struct Period {
     pub main: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Outcome {
     pub id: String,
@@ -153,7 +157,7 @@ impl fmt::Display for Outcome {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Price {
     pub id: String,
