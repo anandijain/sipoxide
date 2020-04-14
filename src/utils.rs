@@ -75,49 +75,12 @@ pub fn lines_to_csv(lines: Vec<lines::Root>, write_fn: String) -> Result<(), Box
     let mut wtr = csv::Writer::from_path(write_fn)?;
 
     wtr.write_record(LINES_HEADER)?;
-
+    
     for s in lines.iter() {
         // s is a Root
-        for e in s.events.iter() {
-            for dg in e.display_groups.iter() {
-                for m in dg.markets.iter() {
-                    for oc in m.outcomes.iter() {
-                        if let Some(hc) = &oc.price.handicap {
-                            let rec = &[
-                                &oc.id,
-                                &e.id,
-                                &e.sport,
-                                &e.description,
-                                &dg.description,
-                                &m.description,
-                                &oc.description,
-                                &oc.status,
-                                &oc.type_field,
-                                &oc.price.decimal,
-                                &hc.to_string(),
-                            ];
-                            wtr.write_record(rec)?;
-                            println!("{:#?}", rec);
-                        } else {
-                            let rec = &[
-                                &oc.id,
-                                &e.id,
-                                &e.sport,
-                                &e.description,
-                                &dg.description,
-                                &m.description,
-                                &oc.description,
-                                &oc.status,
-                                &oc.type_field,
-                                &oc.price.decimal,
-                                &"".to_string(),
-                            ];
-                            wtr.write_record(rec)?;
-                            println!("{:#?}", rec);
-                        }
-                    }
-                }
-            }
+        let recs = lines::Root::to_records(s);
+        for r in recs.iter(){
+            wtr.write_record(r)?;
         }
     }
     wtr.flush()?;
