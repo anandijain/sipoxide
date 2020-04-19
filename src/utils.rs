@@ -2,49 +2,53 @@ extern crate csv;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
-use std::{
-    error::Error,
-    fs,
-    collections::HashMap,
-};
+use std::{collections::HashMap, error::Error, fs};
 
 use crate::lines;
 use crate::scores;
 
 const LINES_HEADER: &[&'static str; 16] = &[
-        "oc_id",
-        "mkt_id",
-        "dg_id",
-        "id",
-        "comp_id",
-        "sport",
-        "event_desc",
-        "live",
-        "status",
-        "dg_desc",
-        "mkt_desc",
-        "oc_desc",
-        "oc_status",
-        "oc_type_field",
-        "price",
-        "hc",
-    ];
+    "oc_id",
+    "mkt_id",
+    "dg_id",
+    "id",
+    "comp_id",
+    "sport",
+    "event_desc",
+    "live",
+    "status",
+    "dg_desc",
+    "mkt_desc",
+    "oc_desc",
+    "oc_status",
+    "oc_type_field",
+    "price",
+    "hc",
+];
 
 const SCORES_HEADER: &[&'static str; 9] = &[
-        "id",
-        "sport",
-        "status",
-        "last_mod",
-        "period",
-        "secs",
-        "is_ticking",
-        "a_pts",
-        "h_pts",
+    "id",
+    "sport",
+    "status",
+    "last_mod",
+    "period",
+    "secs",
+    "is_ticking",
+    "a_pts",
+    "h_pts",
 ];
 
 pub fn lilmatcher(s: Option<String>) -> String {
     match s {
         Some(s) => s,
+        None => "".to_string(),
+    }
+}
+
+// wtf
+pub fn lilmatcher_i64(s: Option<i64>) -> String {
+    match s {
+        Some(s) => s.to_string(),
         None => "".to_string(),
     }
 }
@@ -90,18 +94,16 @@ pub fn lines_to_csv(lines: Vec<lines::Root>, write_fn: String) -> Result<(), Box
     let mut wtr = csv::Writer::from_path(write_fn)?;
 
     wtr.write_record(LINES_HEADER)?;
-    
     for s in lines.iter() {
         // s is a Root
         let recs = lines::Root::to_records(s);
-        for r in recs.iter(){
+        for r in recs.iter() {
             wtr.write_record(r)?;
         }
     }
     wtr.flush()?;
     Ok(())
 }
-
 
 #[tokio::main]
 pub async fn getter(url: String) -> Result<String, reqwest::Error> {
@@ -115,24 +117,24 @@ pub fn get_scores() -> Option<Vec<scores::Root>> {
     let scores_url = "https://services.bovada.lv/services/sports/results/api/v1/scores/";
     if let Ok(body) = getter(scores_url.to_string()) {
         let scores: Vec<scores::Root> = serde_json::from_str(&body.to_string()).unwrap();
-        return Some(scores)
+        return Some(scores);
     }
-    return None
+    return None;
 }
 
 pub fn get_lines() -> Option<Vec<lines::Root>> {
     let lines_url = "https://www.bovada.lv/services/sports/event/v2/events/A/description/";
     if let Ok(body) = getter(lines_url.to_string()) {
         let lines: Vec<lines::Root> = serde_json::from_str(&body.to_string()).unwrap();
-        return Some(lines)
+        return Some(lines);
     }
-    return None
+    return None;
 }
 
 // pub fn cmp(t1, t2: HashMap<String, Vec<String>) -> Vec<String> {
-    // at the end of cmp, t1 can be entirely deallocd, 
-    // t2 must live on, as ret is list of ids, which are new in t2
-    // maybe return Vec<csv::StringRecord>
+// at the end of cmp, t1 can be entirely deallocd,
+// t2 must live on, as ret is list of ids, which are new in t2
+// maybe return Vec<csv::StringRecord>
 
 // }
 

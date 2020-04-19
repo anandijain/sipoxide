@@ -4,6 +4,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 use std::collections::HashMap;
+use crate::utils;
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -14,6 +15,16 @@ pub struct Root {
     pub meta_data: MetaData,
     pub game_data: GameData,
     pub live_data: LiveData,
+}
+
+impl Root {
+    pub fn to_records(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new(); 
+        for p in self.live_data.plays.all_plays.iter() {
+            recs.push(Play::to_record(p));
+        }
+        return recs;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -102,11 +113,11 @@ pub struct Team {
     pub location_name: String,
     pub first_year_of_play: String,
     pub league: General,
-    pub division: General,
+    pub division: Option<General>,
     pub sport: General,
     pub short_name: String,
     pub record: General,
-    pub spring_league: RefWAbbreviation,
+    pub spring_league: Option<RefWAbbreviation>,
     pub all_star_status: String,
     pub active: bool,
 }
@@ -114,24 +125,24 @@ pub struct Team {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct General {
-    pub id: i64,
-    pub name: String,
-    pub link: String,
+    pub id: Option<i64>,
+    pub name: Option<String>,
+    pub link: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NamedRef {
-    pub id: i64,
-    pub full_name: String,
-    pub link: String,
+    pub id: Option<i64>,
+    pub full_name: Option<String>,
+    pub link: Option<String>,
 }
 
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Record {
-    pub games_played: i64,
+    pub games_played: Option<i64>,
     pub wild_card_games_back: String,
     pub league_games_back: String,
     pub spring_league_games_back: String,
@@ -157,7 +168,7 @@ pub struct LeagueRecord {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RefWAbbreviation {
-    pub id: i64,
+    pub id: Option<i64>,
     pub name: String,
     pub link: String,
     pub abbreviation: String,
@@ -176,24 +187,24 @@ pub struct GameDataPlayer {
     pub id: i64,
     pub first_name: String,
     pub last_name: String,
-    pub primary_number: String,
-    pub birth_date: String,
-    pub current_age: i64,
-    pub birth_city: String,
-    pub birth_country: String,
-    pub height: String,
+    pub primary_number: Option<String>,
+    pub birth_date: Option<String>,
+    pub current_age: Option<i64>,
+    pub birth_city: Option<String>,
+    pub birth_country: Option<String>,
+    pub height: Option<String>,
     pub weight: i64,
     pub active: bool,
     pub primary_position: Position,
     pub use_name: String,
-    pub middle_name: String,
+    pub middle_name: Option<String>,
     pub boxscore_name: String,
-    pub nick_name: String,
+    pub nick_name: Option<String>,
     pub gender: String,
-    pub name_matrilineal: String,
+    pub name_matrilineal: Option<String>,
     pub is_player: bool,
     pub is_verified: bool,
-    pub mlb_debut_date: String,
+    pub mlb_debut_date: Option<String>,
     pub bat_side: CodeDesc,
     pub pitch_hand: CodeDesc,
     pub name_first_last: String,
@@ -213,7 +224,7 @@ pub struct GameDataPlayer {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Venue {
-    pub id: i64,
+    pub id: Option<i64>,
     pub name: String,
     pub link: String,
     pub location: Location,
@@ -328,6 +339,37 @@ pub struct Play {
     pub play_end_time: String,
 }
 
+impl Play {
+    pub fn to_record(&self) -> Vec<String> {
+        let rec: Vec<String> = vec!(
+            self.about.start_time.to_string(),
+            self.about.end_time.to_string(),
+            self.about.inning.to_string(),
+            utils::lilmatcher_i64(self.count.balls).to_string(),
+            utils::lilmatcher_i64(self.count.strikes).to_string(),
+            utils::lilmatcher_i64(self.count.outs).to_string(),
+            self.result.away_score.to_string(),
+            self.result.home_score.to_string(),
+            utils::lilmatcher(self.matchup.batter.full_name.clone()).to_string(),
+            utils::lilmatcher(self.matchup.pitcher.full_name.clone()).to_string(),
+        );
+        return rec;
+    }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayResult {
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub event: String,
+    pub event_type: String,
+    pub description: String,
+    pub rbi: i64,
+    pub away_score: i64,
+    pub home_score: i64,
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct About {
@@ -347,9 +389,9 @@ pub struct About {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Count {
-    pub balls: i64,
-    pub strikes: i64,
-    pub outs: i64,
+    pub balls: Option<i64>,
+    pub strikes: Option<i64>,
+    pub outs: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -407,8 +449,8 @@ pub struct Movement {
 #[serde(rename_all = "camelCase")]
 pub struct QuickRef {
     // ResponsiblePitcher Player
-    pub id: i64,
-    pub link: String,
+    pub id: Option<i64>,
+    pub link: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -480,18 +522,6 @@ pub struct CurrentPlay {
     pub play_end_time: String,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PlayResult {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub event: String,
-    pub event_type: String,
-    pub description: String,
-    pub rbi: i64,
-    pub away_score: i64,
-    pub home_score: i64,
-}
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -575,7 +605,7 @@ pub struct Linescore {
     pub offense: Offense,
     pub balls: i64,
     pub strikes: i64,
-    pub outs: i64,
+    pub outs: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -659,16 +689,16 @@ pub struct BoxscoreTeams {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatsBlock {
-    pub batting: Batting,
-    pub pitching: Pitching,
-    pub fielding: Fielding,
+    pub batting: Option<Batting>,
+    pub pitching: Option<Pitching>,
+    pub fielding: Option<Fielding>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BoxTeam {
     pub team: BoxTeamRef,
-    pub team_stats: StatsBlock,
+    pub team_stats: Option<StatsBlock>,
     pub players: BoxscorePlayers,
     pub batters: Vec<i64>,
     pub pitchers: Vec<i64>,
@@ -682,7 +712,7 @@ pub struct BoxTeam {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BoxTeamRef {
-    pub id: i64,
+    pub id: Option<i64>,
     pub name: String,
     pub link: String,
     pub spring_league: Option<RefWAbbreviation>,
@@ -763,109 +793,109 @@ pub struct Leaders {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Batting {
-    pub games_played: i64,
-    pub fly_outs: i64,
-    pub ground_outs: i64,
-    pub runs: i64,
-    pub doubles: i64,
-    pub triples: i64,
-    pub home_runs: i64,
-    pub strike_outs: i64,
-    pub base_on_balls: i64,
-    pub intentional_walks: i64,
-    pub hits: i64,
-    pub hit_by_pitch: i64,
-    pub avg: String,
-    pub at_bats: i64,
-    pub obp: String,
-    pub slg: String,
-    pub ops: String,
-    pub caught_stealing: i64,
-    pub stolen_bases: i64,
-    pub stolen_base_percentage: String,
-    pub ground_into_double_play: i64,
-    pub ground_into_triple_play: i64,
-    pub plate_appearances: i64,
-    pub total_bases: i64,
-    pub rbi: i64,
-    pub left_on_base: i64,
-    pub sac_bunts: i64,
-    pub sac_flies: i64,
-    pub babip: String,
-    pub catchers_interference: i64,
-    pub pickoffs: i64,
-    pub at_bats_per_home_run: String,
+    pub games_played: Option<i64>,
+    pub fly_outs: Option<i64>,
+    pub ground_outs: Option<i64>,
+    pub runs: Option<i64>,
+    pub doubles: Option<i64>,
+    pub triples: Option<i64>,
+    pub home_runs: Option<i64>,
+    pub strike_outs: Option<i64>,
+    pub base_on_balls: Option<i64>,
+    pub intentional_walks: Option<i64>,
+    pub hits: Option<i64>,
+    pub hit_by_pitch: Option<i64>,
+    pub avg: Option<String>,
+    pub at_bats: Option<i64>,
+    pub obp: Option<String>,
+    pub slg: Option<String>,
+    pub ops: Option<String>,
+    pub caught_stealing: Option<i64>,
+    pub stolen_bases: Option<i64>,
+    pub stolen_base_percentage: Option<String>,
+    pub ground_into_double_play: Option<i64>,
+    pub ground_into_triple_play: Option<i64>,
+    pub plate_appearances: Option<i64>,
+    pub total_bases: Option<i64>,
+    pub rbi: Option<i64>,
+    pub left_on_base: Option<i64>,
+    pub sac_bunts: Option<i64>,
+    pub sac_flies: Option<i64>,
+    pub babip: Option<String>,
+    pub catchers_interference: Option<i64>,
+    pub pickoffs: Option<i64>,
+    pub at_bats_per_home_run: Option<String>,
 }
 
 //pitching
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Pitching {
-    pub games_played: i64,
-    pub games_started: i64,
-    pub ground_outs: i64,
-    pub air_outs: i64,
-    pub runs: i64,
-    pub doubles: i64,
-    pub triples: i64,
-    pub home_runs: i64,
-    pub strike_outs: i64,
-    pub base_on_balls: i64,
-    pub intentional_walks: i64,
-    pub hits: i64,
-    pub hit_by_pitch: i64,
-    pub at_bats: i64,
-    pub obp: String,
-    pub caught_stealing: i64,
-    pub stolen_bases: i64,
-    pub stolen_base_percentage: String,
-    pub era: String,
-    pub innings_pitched: String,
-    pub wins: i64,
-    pub losses: i64,
-    pub saves: i64,
-    pub save_opportunities: i64,
-    pub holds: i64,
-    pub blown_saves: i64,
-    pub earned_runs: i64,
-    pub whip: String,
-    pub outs: i64,
-    pub games_pitched: i64,
-    pub complete_games: i64,
-    pub shutouts: i64,
-    pub hit_batsmen: i64,
-    pub balks: i64,
-    pub wild_pitches: i64,
-    pub pickoffs: i64,
-    pub ground_outs_to_airouts: String,
-    pub rbi: i64,
-    pub win_percentage: String,
-    pub games_finished: i64,
-    pub strikeout_walk_ratio: String,
-    pub strikeouts_per9_inn: String,
-    pub walks_per9_inn: String,
-    pub hits_per9_inn: String,
-    pub runs_scored_per9: String,
-    pub home_runs_per9: String,
-    pub inherited_runners: i64,
-    pub inherited_runners_scored: i64,
-    pub catchers_interference: i64,
-    pub sac_bunts: i64,
-    pub sac_flies: i64,
+    pub games_played: Option<i64>,
+    pub games_started: Option<i64>,
+    pub ground_outs: Option<i64>,
+    pub air_outs: Option<i64>,
+    pub runs: Option<i64>,
+    pub doubles: Option<i64>,
+    pub triples: Option<i64>,
+    pub home_runs: Option<i64>,
+    pub strike_outs: Option<i64>,
+    pub base_on_balls: Option<i64>,
+    pub intentional_walks: Option<i64>,
+    pub hits: Option<i64>,
+    pub hit_by_pitch: Option<i64>,
+    pub at_bats: Option<i64>,
+    pub obp: Option<String>,
+    pub caught_stealing: Option<i64>,
+    pub stolen_bases: Option<i64>,
+    pub stolen_base_percentage: Option<String>,
+    pub era: Option<String>,
+    pub innings_pitched: Option<String>,
+    pub wins: Option<i64>,
+    pub losses: Option<i64>,
+    pub saves: Option<i64>,
+    pub save_opportunities: Option<i64>,
+    pub holds: Option<i64>,
+    pub blown_saves: Option<i64>,
+    pub earned_runs: Option<i64>,
+    pub whip: Option<String>,
+    pub outs: Option<i64>,
+    pub games_pitched: Option<i64>,
+    pub complete_games: Option<i64>,
+    pub shutouts: Option<i64>,
+    pub hit_batsmen: Option<i64>,
+    pub balks: Option<i64>,
+    pub wild_pitches: Option<i64>,
+    pub pickoffs: Option<i64>,
+    pub ground_outs_to_airouts: Option<String>,
+    pub rbi: Option<i64>,
+    pub win_percentage: Option<String>,
+    pub games_finished: Option<i64>,
+    pub strikeout_walk_ratio: Option<String>,
+    pub strikeouts_per9_inn: Option<String>,
+    pub walks_per9_inn: Option<String>,
+    pub hits_per9_inn: Option<String>,
+    pub runs_scored_per9: Option<String>,
+    pub home_runs_per9: Option<String>,
+    pub inherited_runners: Option<i64>,
+    pub inherited_runners_scored: Option<i64>,
+    pub catchers_interference: Option<i64>,
+    pub sac_bunts: Option<i64>,
+    pub sac_flies: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fielding {
-    pub assists: i64,
-    pub put_outs: i64,
-    pub errors: i64,
-    pub chances: i64,
-    pub caught_stealing: i64,
-    pub passed_ball: i64,
-    pub stolen_bases: i64,
-    pub stolen_base_percentage: String,
-    pub pickoffs: i64,
+    pub assists: Option<i64>,
+    pub put_outs: Option<i64>,
+    pub errors: Option<i64>,
+    pub chances: Option<i64>,
+    pub caught_stealing: Option<i64>,
+    pub passed_ball: Option<i64>,
+    pub stolen_bases: Option<i64>,
+    pub stolen_base_percentage: Option<String>,
+    pub pickoffs: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -874,9 +904,9 @@ pub struct BoxscorePlayer {
     pub person: NamedRef,
     pub jersey_number: String,
     pub position: Position,
-    pub stats: StatsBlock,
+    pub stats: Option<StatsBlock>,
     pub status: CodeDesc,
-    pub parent_team_id: i64,
-    pub season_stats: StatsBlock,
+    pub parent_team_id: Option<i64>,
+    pub season_stats: Option<StatsBlock>,
     pub game_status: PlayerGameStatus,
 }
