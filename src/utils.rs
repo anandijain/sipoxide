@@ -11,11 +11,16 @@ use std::{
 use crate::lines;
 use crate::scores;
 
-const LINES_HEADER: &[&'static str; 11] = &[
+const LINES_HEADER: &[&'static str; 16] = &[
         "oc_id",
+        "mkt_id",
+        "dg_id",
         "id",
+        "comp_id",
         "sport",
         "event_desc",
+        "live",
+        "status",
         "dg_desc",
         "mkt_desc",
         "oc_desc",
@@ -36,6 +41,13 @@ const SCORES_HEADER: &[&'static str; 9] = &[
         "a_pts",
         "h_pts",
 ];
+
+pub fn lilmatcher(s: Option<String>) -> String {
+    match s {
+        Some(s) => s,
+        None => "".to_string(),
+    }
+}
 
 pub fn test_json_to_csv() {
     json_scores_file_to_csv(
@@ -120,6 +132,7 @@ pub fn get_lines() -> Option<Vec<lines::Root>> {
 // pub fn cmp(t1, t2: HashMap<String, Vec<String>) -> Vec<String> {
     // at the end of cmp, t1 can be entirely deallocd, 
     // t2 must live on, as ret is list of ids, which are new in t2
+    // maybe return Vec<csv::StringRecord>
 
 // }
 

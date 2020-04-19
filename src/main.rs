@@ -2,10 +2,12 @@ extern crate serde_derive;
 extern crate csv;
 extern crate serde;
 
+use std::collections::HashMap;
+
 mod utils;
 mod lines;
 mod scores;
-
+mod MLB;
 
 fn main() {
     let lines_fn = "./data/lines.csv";
