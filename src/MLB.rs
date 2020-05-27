@@ -5,7 +5,15 @@ extern crate serde_json;
 
 use std::collections::HashMap;
 use crate::utils;
+/*
+https://statsapi.mlb.com/api/v1.1/game/607243/feed/live
+https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=2020-04-18&endDate=2020-04-18
 
+https://cuts.diamond.mlb.com/FORGE/2020/2020-02/21/b666df28-a14073cb-4cf3f821-csvm-diamondx64-asset_1280x720_59_4000K.mp4
+https://www.mlb.com/data-service/en/search?advancedCriteria=%2Fvideos%3Ftags.slug%3Dclassic&limit=100
+https://www.mlb.com/data-service/en/videos/tatis-jr-s-15-run-inning
+https://www.mlb.com/news-forge/article-data/cole-tucker-has-to-name-son-rhys
+*/
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -21,7 +29,9 @@ impl Root {
     pub fn to_records(&self) -> Vec<Vec<String>> {
         let mut recs: Vec<Vec<String>> = Vec::new(); 
         for p in self.live_data.plays.all_plays.iter() {
-            recs.push(Play::to_record(p));
+            // for play_rec in Play::to_record(p).iter() {
+            let rec: Vec<String> =  Play::to_record(p);
+            println!("{:#?}", rec);
         }
         return recs;
     }
@@ -50,8 +60,8 @@ pub struct GameData {
     pub flags: Flags,
     pub alerts: Vec<::serde_json::Value>,
     pub probable_pitchers: ::serde_json::Value,
-    pub official_scorer: NamedRef,
-    pub primary_datacaster: NamedRef,
+    pub official_scorer: Option<NamedRef>,
+    pub primary_datacaster: Option<NamedRef>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -102,13 +112,13 @@ pub struct Teams {
 #[serde(rename_all = "camelCase")]
 pub struct Team {
     pub id: i64,
-    pub name: String,
+    pub name: Option<String>,
     pub link: String,
     pub season: i64,
     pub venue: General,
     pub team_code: String,
     pub file_code: String,
-    pub abbreviation: String,
+    pub abbreviation: Option<String>,
     pub team_name: String,
     pub location_name: String,
     pub first_year_of_play: String,
@@ -129,6 +139,7 @@ pub struct General {
     pub name: Option<String>,
     pub link: Option<String>,
 }
+
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -165,13 +176,25 @@ pub struct LeagueRecord {
     pub pct: String,
 }
 
+impl LeagueRecord {
+    pub fn to_record(&self) -> Vec<String> {
+        let rec: Vec<String> = vec!(   
+            self.wins.to_string(),
+            self.losses.to_string(),
+            self.pct.to_string(),
+        );
+        return rec;
+    }
+}
+    
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RefWAbbreviation {
     pub id: Option<i64>,
-    pub name: String,
+    pub name: Option<String>,
     pub link: String,
-    pub abbreviation: String,
+    pub abbreviation: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -225,7 +248,7 @@ pub struct GameDataPlayer {
 #[serde(rename_all = "camelCase")]
 pub struct Venue {
     pub id: Option<i64>,
-    pub name: String,
+    pub name: Option<String>,
     pub link: String,
     pub location: Location,
     pub time_zone: TimeZone,
@@ -236,9 +259,9 @@ pub struct Venue {
 #[serde(rename_all = "camelCase")]
 pub struct Location {
     pub city: String,
-    pub state: String,
+    pub state: Option<String>,
     pub state_abbrev: String,
-    pub default_coordinates: LatLongCoords,
+    pub default_coordinates: Option<LatLongCoords>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -252,8 +275,8 @@ pub struct LatLongCoords {
 #[serde(rename_all = "camelCase")]
 pub struct TimeZone {
     pub id: String,
-    pub offset: i64,
-    pub tz: String,
+    pub offset: Option<i64>,
+    pub tz: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -262,12 +285,12 @@ pub struct FieldInfo {
     pub capacity: i64,
     pub turf_type: String,
     pub roof_type: String,
-    pub left_line: i64,
-    pub left: i64,
-    pub left_center: i64,
-    pub center: i64,
-    pub right_center: i64,
-    pub right_line: i64,
+    pub left_line: Option<i64>,
+    pub left: Option<i64>,
+    pub left_center: Option<i64>,
+    pub center: Option<i64>,
+    pub right_center: Option<i64>,
+    pub right_line: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -318,7 +341,7 @@ pub struct LiveData {
 #[serde(rename_all = "camelCase")]
 pub struct Plays {
     pub all_plays: Vec<Play>,
-    pub current_play: Play,
+    pub current_play: Option<Play>,
     pub scoring_plays: Vec<i64>,
     pub plays_by_inning: Vec<PlaysByInning>,
 }
@@ -339,9 +362,23 @@ pub struct Play {
     pub play_end_time: String,
 }
 
+
+
+
 impl Play {
+    pub fn to_records(&self) -> Vec<Vec<String>> {
+        let mut recs: Vec<Vec<String>> = Vec::new();
+        for play in self.play_events.iter() {
+            let mut rec: Vec<String> = Play::to_record(self);
+            rec.append(&mut PlayEvent::to_record(play));
+            recs.push(rec);
+        }
+        println!("{:#?}", recs);
+        return recs;
+    }
+
     pub fn to_record(&self) -> Vec<String> {
-        let rec: Vec<String> = vec!(
+        let mut rec: Vec<String> = vec!(
             self.about.start_time.to_string(),
             self.about.end_time.to_string(),
             self.about.inning.to_string(),
@@ -350,11 +387,13 @@ impl Play {
             utils::lilmatcher_i64(self.count.outs).to_string(),
             self.result.away_score.to_string(),
             self.result.home_score.to_string(),
-            utils::lilmatcher(self.matchup.batter.full_name.clone()).to_string(),
-            utils::lilmatcher(self.matchup.pitcher.full_name.clone()).to_string(),
+            // utils::lilmatcher(self.matchup.batter.full_name.clone()).to_string(),
+            // utils::lilmatcher(self.matchup.pitcher.full_name.clone()).to_string(),
+            self.at_bat_index.to_string(),
         );
         return rec;
     }
+
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -399,7 +438,7 @@ pub struct Count {
 pub struct Matchup {
     pub batter: NamedRef,
     pub bat_side: CodeDesc,
-    pub pitcher: NamedRef,
+    pub pitcher: Option<NamedRef>,
     pub pitch_hand: CodeDesc,
     pub post_on_first: Option<NamedRef>,
     pub batter_hot_cold_zones: Vec<::serde_json::Value>,
@@ -413,7 +452,7 @@ pub struct Matchup {
 #[serde(rename_all = "camelCase")]
 pub struct Splits {
     pub batter: String,
-    pub pitcher: String,
+    pub pitcher: Option<String>,
     pub men_on_base: String,
 }
 
@@ -474,12 +513,68 @@ pub struct PlayEvent {
     pub batting_order: Option<String>,
 }
 
+impl PlayEvent {
+    pub fn to_record(&self) -> Vec<String> {
+        let mut rec: Vec<String> = vec!(
+            self.index.to_string(),
+            self.is_pitch.to_string(),
+            utils::lilmatcher_string(self.play_id.clone()),
+            utils::lilmatcher_i64(self.pitch_number.clone()),
+            utils::lilmatcher_string(self.action_play_id.clone()),
+            utils::lilmatcher_string(self.batting_order.clone()),
+        );
+        if let Some(pitch) = &self.pitch_data {
+            rec.append(&mut PitchCoords::to_record(&pitch.coordinates));
+        } else {
+            rec.append(&mut vec!(
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+            ));
+        }
+        if let Some(hit) = &self.hit_data {
+            rec.append(&mut HitData::to_record(&hit));
+        } else {
+            rec.append(&mut vec!(
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+            ));
+        }
+        if let Some(pos) = &self.position {
+            rec.append(&mut Position::to_record(&pos));
+        } else {
+            rec.append(&mut vec!(
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+            ));
+        }
+        return rec;
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PitchData {
     pub strike_zone_top: f64,
     pub strike_zone_bottom: f64,
-    pub coordinates: XYCoords,
+    pub coordinates: PitchCoords,
     pub breaks: ::serde_json::Value,
 }
 
@@ -492,36 +587,86 @@ pub struct XYCoords {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PitchCoords {
+    pub a_y: Option<f64>,
+    pub a_z: Option<f64>,
+    pub pfx_x: Option<f64>,
+    pub pfx_z: Option<f64>,
+    pub p_x: Option<f64>,
+    pub p_z: Option<f64>,
+    pub v_x0: Option<f64>,
+    pub v_y0: Option<f64>,
+    pub v_z0: Option<f64>,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub x0: Option<f64>,
+    pub y0: Option<f64>,
+    pub z0: Option<f64>,
+    pub a_x: Option<f64>,
+}
+
+impl PitchCoords {
+    pub fn to_record(&self) ->Vec<String> {
+        let rec: Vec<String> = vec!(
+            utils::lilmatcher_f64(self.a_y),
+            utils::lilmatcher_f64(self.a_z),
+            utils::lilmatcher_f64(self.pfx_x),
+            utils::lilmatcher_f64(self.pfx_z),
+            utils::lilmatcher_f64(self.p_x),
+            utils::lilmatcher_f64(self.p_z),
+            utils::lilmatcher_f64(self.v_x0),
+            utils::lilmatcher_f64(self.v_y0),
+            utils::lilmatcher_f64(self.v_z0),
+            utils::lilmatcher_f64(self.x),
+            utils::lilmatcher_f64(self.y),
+            utils::lilmatcher_f64(self.x0),
+            utils::lilmatcher_f64(self.y0),
+            utils::lilmatcher_f64(self.z0),
+            utils::lilmatcher_f64(self.a_x)
+    );
+    return rec;
+    }
+}
+
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CoordsXy {
     pub coord_x: f64,
     pub coord_y: f64,
 }
+
+impl CoordsXy {
+    pub fn to_record(&self) ->Vec<String> {
+        let rec: Vec<String> = vec!(
+            self.coord_x.to_string(),
+            self.coord_y.to_string(),
+    );
+    return rec;
+    }
+}
+
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HitData {
     pub trajectory: String,
     pub hardness: String,
-    pub location: String,
+    pub location: Option<String>,
     pub coordinates: CoordsXy,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CurrentPlay {
-    pub result: PlayResult,
-    pub about: About,
-    pub count: Count,
-    pub matchup: Matchup,
-    pub pitch_index: Vec<i64>,
-    pub action_index: Vec<i64>,
-    pub runner_index: Vec<i64>,
-    pub runners: Vec<Runner>,
-    pub play_events: Vec<PlayEvent>,
-    pub at_bat_index: i64,
-    pub play_end_time: String,
+impl HitData {
+    pub fn to_record(&self) -> Vec<String> {
+        let mut rec: Vec<String> = vec!(
+            self.trajectory.to_string(),
+            self.hardness.to_string(),
+            utils::lilmatcher(self.location.clone()),
+        );
+        rec.append(&mut CoordsXy::to_record(&self.coordinates));
+        return rec;
+    }
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -581,7 +726,7 @@ pub struct Hits {
 pub struct TeamHits {
     pub team: BoxTeamRef,
     pub inning: i64,
-    pub pitcher: NamedRef,
+    pub pitcher: Option<NamedRef>,
     pub batter: NamedRef,
     pub coordinates: XYCoords,
     #[serde(rename = "type")]
@@ -592,19 +737,19 @@ pub struct TeamHits {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Linescore {
-    pub note: String,
-    pub current_inning: i64,
-    pub current_inning_ordinal: String,
-    pub inning_state: String,
-    pub inning_half: String,
-    pub is_top_inning: bool,
-    pub scheduled_innings: i64,
-    pub innings: Vec<Inning>,
-    pub teams: TeamLinescores,
-    pub defense: Defense,
-    pub offense: Offense,
-    pub balls: i64,
-    pub strikes: i64,
+    pub note: Option<String>,
+    pub current_inning: Option<i64>,
+    pub current_inning_ordinal: Option<String>,
+    pub inning_state: Option<String>,
+    pub inning_half: Option<String>,
+    pub is_top_inning: Option<bool>,
+    pub scheduled_innings: Option<i64>,
+    pub innings: Option<Vec<Inning>>,
+    pub teams: Option<TeamLinescores>,
+    pub defense: Option<Defense>,
+    pub offense: Option<Offense>,
+    pub balls: Option<i64>,
+    pub strikes: Option<i64>,
     pub outs: Option<i64>,
 }
 
@@ -636,38 +781,38 @@ pub struct TeamLinescores {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InningStatus {
-    pub runs: i64,
-    pub hits: i64,
-    pub errors: i64,
-    pub left_on_base: i64,
+    pub runs: Option<i64>,
+    pub hits: Option<i64>,
+    pub errors: Option<i64>,
+    pub left_on_base: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Defense {
-    pub pitcher: NamedRef,
-    pub catcher: NamedRef,
-    pub first: NamedRef,
-    pub second: NamedRef,
-    pub third: NamedRef,
-    pub shortstop: NamedRef,
-    pub left: NamedRef,
-    pub center: NamedRef,
-    pub right: NamedRef,
-    pub batter: NamedRef,
-    pub on_deck: NamedRef,
-    pub in_hole: NamedRef,
-    pub team: General,
+    pub pitcher: Option<NamedRef>,
+    pub catcher: Option<NamedRef>,
+    pub first: Option<NamedRef>,
+    pub second: Option<NamedRef>,
+    pub third: Option<NamedRef>,
+    pub shortstop: Option<NamedRef>,
+    pub left: Option<NamedRef>,
+    pub center: Option<NamedRef>,
+    pub right: Option<NamedRef>,
+    pub batter: Option<NamedRef>,
+    pub on_deck: Option<NamedRef>,
+    pub in_hole: Option<NamedRef>,
+    pub team: Option<General>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Offense {
-    pub batter: NamedRef,
-    pub on_deck: NamedRef,
-    pub in_hole: NamedRef,
-    pub pitcher: NamedRef,
-    pub team: General,
+    pub batter: Option<NamedRef>,
+    pub on_deck: Option<NamedRef>,
+    pub in_hole: Option<NamedRef>,
+    pub pitcher: Option<NamedRef>,
+    pub team: Option<General>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -713,7 +858,7 @@ pub struct BoxTeam {
 #[serde(rename_all = "camelCase")]
 pub struct BoxTeamRef {
     pub id: Option<i64>,
-    pub name: String,
+    pub name: Option<String>,
     pub link: String,
     pub spring_league: Option<RefWAbbreviation>,
     pub all_star_status: String,
@@ -760,10 +905,22 @@ pub struct CodeDesc {
 #[serde(rename_all = "camelCase")]
 pub struct Position {
     pub code: String,
-    pub name: String,
+    pub name: Option<String>,
     #[serde(rename = "type")]
     pub type_field: String,
     pub abbreviation: String,
+}
+
+impl Position {
+    pub fn to_record(&self) ->Vec<String> {
+        let rec: Vec<String> = vec![
+            self.code.to_string(),
+            utils::lilmatcher(self.name.clone()),
+            self.type_field.to_string(),
+            self.abbreviation.to_string(),
+        ];
+    return rec;
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -776,9 +933,9 @@ pub struct Official {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Decisions {
-    pub winner: NamedRef,
-    pub loser: NamedRef,
-    pub save: NamedRef,
+    pub winner: Option<NamedRef>,
+    pub loser: Option<NamedRef>,
+    pub save: Option<NamedRef>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -902,7 +1059,7 @@ pub struct Fielding {
 #[serde(rename_all = "camelCase")]
 pub struct BoxscorePlayer {
     pub person: NamedRef,
-    pub jersey_number: String,
+    pub jersey_number: Option<String>,
     pub position: Position,
     pub stats: Option<StatsBlock>,
     pub status: CodeDesc,
@@ -910,3 +1067,48 @@ pub struct BoxscorePlayer {
     pub season_stats: Option<StatsBlock>,
     pub game_status: PlayerGameStatus,
 }
+
+
+pub const MLB_LIVE_PLAY_HEADER: [&'static str; 39] = [
+"start_time",
+"end_time",
+"inning",
+"balls",
+"strikes",
+"outs",
+"away_score",
+"home_score",
+// "batter",
+// "pitcher",
+"at_bat_index",
+"index",
+"is_pitch",
+"play_id",
+"pitch_number",
+"action_play_id",
+"batting_order",
+"a_y",
+"a_z",
+"pfx_x",
+"pfx_z",
+"p_x",
+"p_z",
+"v_x0",
+"v_y0",
+"v_z0",
+"x",
+"y",
+"x0",
+"y0",
+"z0",
+"a_x",
+"trajectory",
+"hardness",
+"location",
+"hit_x",
+"hit_y",
+"pos_code",
+"pos_name",
+"pos_type_field",
+"pos_abbreviation",
+];
